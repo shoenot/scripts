@@ -1,0 +1,4 @@
+#!/bin/bash
+IMAGEPATH="/home/shurjo/Pictures/Screenshots/$( date '+%F-%H-%M-%S' ).png"
+gnome-screenshot -a -f $IMAGEPATH
+cat $IMAGEPATH | wl-copy

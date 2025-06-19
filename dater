@@ -1,0 +1,106 @@
+#!/usr/bin/env python3
+
+import exifread
+import sys
+import os 
+import ffmpeg
+from dateutil import parser
+from datetime import datetime
+from pathlib import Path 
+from shutil import move, rmtree
+
+IMAGE_EXT = (".jpg", ".JPG", ".jpeg", ".JPEG", ".png", ".PNG", ".tiff", ".TIFF", ".THM", ".thm")
+VIDEO_EXT = (".mp4", ".MP4", ".avi", ".AVI", ".mkv", ".MKV", ".3gp", ".3GP")
+
+unknown_ext = []
+no_metadata = []
+
+def get_date(path):
+    if path.suffix in IMAGE_EXT:
+        file_type = 1
+        with open(path, "rb") as fp:
+            try:
+                tags = exifread.process_file(fp)
+                # All this is because the EXIF data encodes the date with colons, which makes the parser think its time instead of date.
+                datestr = str(tags['EXIF DateTimeOriginal']).split(' ')[0].replace(':', '/')
+                date = parser.parse(datestr)
+            except Exception as e:
+                print("Error in file {}. Trying filesystem time.".format(path))
+                try:
+                    time = path.stat().st_mtime
+                    date = datetime.fromtimestamp(time)
+                except Exception as e:
+                    print(e)
+                    date = None
+    elif path.suffix in VIDEO_EXT:
+        file_type = 2
+        data = ffmpeg.probe(path)
+        try:
+            date = parser.parse(data['streams'][0]['tags']['creation_time'])
+        except KeyError:
+            try:
+                time = path.stat().st_mtime
+                date = datetime.fromtimestamp(time)
+            except Exception as e:
+                print(e)
+                date = None
+    else:
+        file_type = 0
+        date = None 
+    return date, file_type
+
+def build_file_info(path):
+    date, file_type = get_date(path)
+    if file_type == 1:
+        if date:
+            dir = f"{date.year}/{date.year}_{date.month}"
+            return [path, dir]
+        else:
+            return [path, "Undated"]
+    elif file_type == 2:
+        if date:
+            dir = f"{date.year}/Videos"
+            return [path, dir]
+        else:
+            return [path, "Undated"]
+    else:
+        return [path, "Uncategorized"]
+
+def get_all_files(dir):
+    file_list = []
+    dir_list = []
+    working_dir = Path(dir)
+    for file in list(working_dir.rglob("*")):
+        if file.is_dir():
+            dir_list.append(file)
+        else:
+            file_list.append(build_file_info(file))
+    return (file_list, dir_list)
+
+def move_file(file_info, cwd):
+    new_dir = cwd / file_info[1]
+    new_dir.mkdir(parents=True, exist_ok=True)
+    print(f"Moving {file_info[0]} to {new_dir}")
+    move(file_info[0], new_dir)
+
+def main():
+    if len(sys.argv) < 2:
+        print("Please provide directory to redir")
+    else:
+        try:
+            dir = Path(sys.argv[1])
+        except Exception as e:
+            print(e)
+    file_list, dir_list = get_all_files(dir)
+    for file_info in file_list:
+        move_file(file_info, dir)
+    print("All files moved. Cleaning up...")
+    for dir in dir_list:
+        try:
+            rmtree(dir, ignore_errors=True)
+        except Exception as e:
+            print(f"Error occurred removing {dir}")
+            print(e)
+
+if __name__ == "__main__":
+    main()

@@ -1,0 +1,3 @@
+#!/bin/bash 
+magick -quality 30% "$1" "$1" && echo "Converted $1"
+

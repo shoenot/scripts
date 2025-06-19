@@ -1,0 +1,56 @@
+#!/usr/bin/env python3
+
+import sys
+from pathlib import Path
+from shutil import move, rmtree 
+from datetime import datetime
+
+def get_all_files(dir):
+    file_list = []
+    working_dir = Path(dir)
+    for file in list(working_dir.rglob("*")):
+        if file.parent != dir:
+            file_list.append(file)
+    return file_list
+
+def rename_file(filename, dir):
+    i = 1
+    newpath = dir / filename 
+    while newpath.is_file():
+        newpath = dir / (filename.stem + f"({i})" + filename.suffix)
+        i = i + 1
+    return newpath
+
+def move_files(file_list, dir):
+    for path in file_list:
+        print(f"Copying {path}")
+        try:
+            move(path, rename_file(path, dir))
+        except Exception:
+            print(f"Cannot move {path}")
+
+def delete_dirs(dir):
+    for file in Path(dir).iterdir():
+        if file.is_dir():
+            try:
+                rmtree(file)
+            except Exception:
+                print(f"Cannot remove {file.absolute}. Moving on...")
+
+def undir(dir):
+    file_list = get_all_files(dir)
+    move_files(file_list, dir)
+    delete_dirs(dir)
+
+def main():
+    if len(sys.argv) < 2:
+        print("Please provide directory to undir")
+    else:
+        try:
+            dir = Path(sys.argv[1])
+            undir(dir)
+        except Exception as e:
+            print(e)
+    
+if __name__ == "__main__":
+    main()
