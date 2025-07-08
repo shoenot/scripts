@@ -1,0 +1,3 @@
+#!/bin/bash 
+find . -name '*.jpg' | xargs -P12 -I{} avifify {}
+find . -name '*.JPG' | xargs -P12 -I{} avifify {}

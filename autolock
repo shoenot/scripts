@@ -1,0 +1,7 @@
+#!/bin/bash 
+
+gdbus wait --session org.gnome.ScreenSaver &&
+    gdbus call --session \
+        --dest org.gnome.ScreenSaver \
+        --object-path /org/gnome/ScreenSaver \
+        --method org.gnome.ScreenSaver.Lock
