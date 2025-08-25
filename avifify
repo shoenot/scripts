@@ -1,3 +1,3 @@
 #!/bin/bash 
-magick mogrify -format avif -quality 80 "$1" && echo "Converted $1 to avif"
-
+magick mogrify -format avif -quality 90 "$1" && echo "Converted $1 to avif"
+[ "$?" -eq 0 ] && (echo "Deleting $1" && rm -f "$1") || echo "Not Deleting $1"

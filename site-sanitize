@@ -1,0 +1,10 @@
+#!/usr/bin/bash
+sed -i '/<\!DOCTYPE html>/d' "$1"
+sed -i '/<html>/d' "$1"
+sed -i '/<head>/d' "$1"
+sed -i '/<meta charset="utf-8" \/>/d' "$1"
+sed -i 's/<title>reactable<\/title>/<div id="data-table">/' "$1"
+sed -i '/<\/head>/d' "$1"
+sed -i '/<body style="background-color: white;">/d' "$1"
+sed -i '/<\/body>/d' "$1"
+sed -i 's/<\/html>/<\/div>/' "$1" 
